@@ -1,0 +1,74 @@
+version: '3'
+services:
+
+#WORDPRESS
+  wordpress:
+     build :
+       context : ./requirements/wordpress/.
+     image : wordpress
+     container_name: wordpress
+     restart: always
+     volumes :
+       - nginx_volume:/var/www/html
+     env_file :
+       - .env
+     networks:
+       - inception
+     depends_on :
+       - mariadb
+
+#MARIADB
+  mariadb:
+     build:
+       context : ./requirements/mariadb/.
+     image: mariadb
+     container_name: mariadb
+     restart: always
+     volumes:
+       - db_volume:/var/lib/mysql/
+     env_file :
+       - .env
+     networks:
+       - inception
+
+#NGINX
+  nginx:
+     build:
+       context : ./requirements/nginx/.
+     image: nginx
+     container_name: nginx
+     ports:
+       - "443:443"
+     restart: always
+     volumes:
+       - nginx_volume:/var/www/html/
+     networks:
+       - inception
+     depends_on :
+       - wordpress
+
+#VOLUMES
+volumes:
+
+  #---------- MariaDB volume ----------
+  db_volume:
+     driver: local
+     driver_opts:
+       type: none
+       device: /home/cjimenez/data/db_volume
+       o: bind
+  
+  #---------- Wordpress volume ----------
+  nginx_volume:
+     driver: local
+     driver_opts:
+       type: none
+       device: /home/cjimenez/data/nginx_volume
+       o: bind
+      
+#---------- List Docker networks ----------
+networks:
+
+  #---------- Simple networks ----------
+  inception:
+     driver: bridge
